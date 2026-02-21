@@ -41,7 +41,7 @@ export default function SeatMap({
                   .map((seat) => {
                     const isReserved = reservedSeatIds.has(seat.id);
                     const isLoading = loadingSeatId === seat.id;
-                    const isDisabled = seat.isOccupied || isReserved || !!loadingSeatId;
+                    const isDisabled = seat.isOccupied || !!loadingSeatId;
 
                     return (
                       <button
@@ -50,7 +50,7 @@ export default function SeatMap({
                         onClick={() => onSeatSelect(seat.id)}
                         title={
                           isReserved
-                            ? `Rząd ${seat.row}, miejsce ${seat.number} — zarezerwowane`
+                            ? `Rząd ${seat.row}, miejsce ${seat.number} — kliknij aby anulować`
                             : seat.isOccupied
                               ? `Rząd ${seat.row}, miejsce ${seat.number} — zajęte`
                               : `Rząd ${seat.row}, miejsce ${seat.number}`
@@ -61,7 +61,7 @@ export default function SeatMap({
                             'bg-primary/50 border-primary/50 cursor-wait animate-pulse',
                           isReserved &&
                             !isLoading &&
-                            'bg-green-500 text-white border-green-600 cursor-default',
+                            'bg-green-500 text-white border-green-600 cursor-pointer hover:bg-green-600',
                           seat.isOccupied &&
                             'bg-muted cursor-not-allowed border-muted-foreground/20 text-muted-foreground/40',
                           !isLoading &&
