@@ -47,9 +47,7 @@ export default function SeatSelectionPage() {
   const basketId = currentBasket?.basketId ?? null;
   const reservations = currentBasket?.reservations ?? [];
 
-  const reservationsRef = useRef(reservations);
-  reservationsRef.current = reservations;
-
+  const sessionReservationIds = useRef<string[]>([]);
   const navigatingToCheckout = useRef(false);
 
   useEffect(() => {
@@ -61,7 +59,7 @@ export default function SeatSelectionPage() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      cancelReservations(reservationsRef.current.map((r) => r.reservationId));
+      cancelReservations(sessionReservationIds.current);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -69,18 +67,12 @@ export default function SeatSelectionPage() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       if (!navigatingToCheckout.current) {
-        cancelReservations(reservationsRef.current.map((r) => r.reservationId));
+        cancelReservations(sessionReservationIds.current);
         clearScreeningBasket(screeningId!);
       }
     };
   }, []);
 
-  const [isTabVisible, setIsTabVisible] = useState(document.visibilityState === 'visible');
-  useEffect(() => {
-    const onVisibilityChange = () => setIsTabVisible(document.visibilityState === 'visible');
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, []);
 
   const { data: screeningsData } = useQuery({
     queryKey: ['screenings'],
@@ -97,8 +89,7 @@ export default function SeatSelectionPage() {
     enabled: !!screeningId,
     staleTime: 0,
     refetchOnMount: 'always',
-    refetchInterval: isTabVisible ? 15_000 : false,
-    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 
   const screening = screeningsData?.screenings.find((s) => s.id === screeningId);
@@ -119,6 +110,10 @@ export default function SeatSelectionPage() {
         try {
           await cancelReservationsAsync([reservation.reservationId]);
           removeReservation(screeningId, reservation.reservationId);
+          sessionReservationIds.current = sessionReservationIds.current.filter(
+            (id) => id !== reservation.reservationId,
+          );
+          await queryClient.invalidateQueries({ queryKey: ['seats', screeningId] });
         } catch {
           setError('Nie udało się anulować rezerwacji. Spróbuj ponownie.');
         } finally {
@@ -151,6 +146,7 @@ export default function SeatSelectionPage() {
         screeningTitle: screening?.movieTitle ?? 'Seans',
         seatLabel: seat ? `Rząd ${seat.row}, miejsce ${seat.number}` : seatId,
       });
+      sessionReservationIds.current.push(reservation.reservationId);
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
         setError('To miejsce zostało właśnie zajęte przez inną osobę. Wybierz inne miejsce.');
