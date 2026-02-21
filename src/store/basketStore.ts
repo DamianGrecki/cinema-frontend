@@ -21,6 +21,7 @@ interface BasketState {
   setBasket: (screeningId: string, basketId: string) => void;
   clearScreeningBasket: (screeningId: string) => void;
   addReservation: (reservation: ReservationItem) => void;
+  removeReservation: (screeningId: string, reservationId: string) => void;
   updatePricingType: (reservationId: string, pricingType: PricingType) => void;
 }
 
@@ -56,6 +57,21 @@ export const useBasketStore = create<BasketState>()(
               [reservation.screeningId]: {
                 ...existing,
                 reservations: [...existing.reservations, reservation],
+              },
+            },
+          };
+        }),
+
+      removeReservation: (screeningId, reservationId) =>
+        set((state) => {
+          const basket = state.baskets[screeningId];
+          if (!basket) return state;
+          return {
+            baskets: {
+              ...state.baskets,
+              [screeningId]: {
+                ...basket,
+                reservations: basket.reservations.filter((r) => r.reservationId !== reservationId),
               },
             },
           };

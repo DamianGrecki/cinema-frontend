@@ -7,7 +7,7 @@ import { pl } from 'date-fns/locale';
 import { ArrowLeft, Clock, MapPin, ShoppingCart } from 'lucide-react';
 import { getScreenings, getScreeningSeats } from '@/api/screenings';
 import { createBasket } from '@/api/basket';
-import { addReservation, expireReservations } from '@/api/reservation';
+import { addReservation, cancelReservations, cancelReservationsAsync } from '@/api/reservation';
 import { useBasketStore } from '@/store/basketStore';
 import SeatMap, { type Seat } from '@/components/SeatMap';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ export default function SeatSelectionPage() {
   const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-  const { baskets, setBasket, clearScreeningBasket, addReservation: storeAddReservation } =
+  const { baskets, setBasket, clearScreeningBasket, addReservation: storeAddReservation, removeReservation } =
     useBasketStore();
 
   const currentBasket = screeningId ? baskets[screeningId] : undefined;
@@ -61,7 +61,7 @@ export default function SeatSelectionPage() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      expireReservations(reservationsRef.current.map((r) => r.reservationId));
+      cancelReservations(reservationsRef.current.map((r) => r.reservationId));
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -69,7 +69,8 @@ export default function SeatSelectionPage() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       if (!navigatingToCheckout.current) {
-        expireReservations(reservationsRef.current.map((r) => r.reservationId));
+        cancelReservations(reservationsRef.current.map((r) => r.reservationId));
+        clearScreeningBasket(screeningId!);
       }
     };
   }, []);
@@ -107,10 +108,25 @@ export default function SeatSelectionPage() {
   const seats: Seat[] = seatsData ? rowToSeats(seatsData, reservedSeatIds) : [];
 
   const handleSeatClick = async (seatId: string) => {
-    if (loadingSeatId || reservedSeatIds.has(seatId) || !screeningId) return;
+    if (loadingSeatId || !screeningId) return;
 
     setLoadingSeatId(seatId);
     setError(null);
+
+    if (reservedSeatIds.has(seatId)) {
+      const reservation = reservations.find((r) => r.seatId === seatId);
+      if (reservation) {
+        try {
+          await cancelReservationsAsync([reservation.reservationId]);
+          removeReservation(screeningId, reservation.reservationId);
+        } catch {
+          setError('Nie udało się anulować rezerwacji. Spróbuj ponownie.');
+        } finally {
+          setLoadingSeatId(null);
+        }
+      }
+      return;
+    }
 
     try {
       let currentBasketId = basketId;
