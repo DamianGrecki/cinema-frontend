@@ -4,7 +4,6 @@ import { ShoppingCart } from 'lucide-react';
 import { useBasketStore } from '@/store/basketStore';
 import { updateReservationPricingType } from '@/api/reservation';
 import { createPayment } from '@/api/payment';
-import { createTickets } from '@/api/ticket';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -78,13 +77,6 @@ export default function CheckoutPage() {
         provider,
         guestEmail: guestEmail || undefined,
       });
-
-      await createTickets(
-        reservations.map((r) => ({
-          reservationId: r.reservationId,
-          pricingType: r.pricingType,
-        })),
-      );
 
       if (screeningId) clearScreeningBasket(screeningId);
       navigate('/confirmation', { state: { paymentData } });
