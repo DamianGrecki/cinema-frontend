@@ -24,6 +24,7 @@ export interface CreatePaymentRequest {
   basketId: string;
   provider: PaymentProvider;
   customerId?: string;
+  guestFirstName?: string;
   guestEmail?: string;
 }
 

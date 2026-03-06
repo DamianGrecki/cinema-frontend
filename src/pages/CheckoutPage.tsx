@@ -40,6 +40,7 @@ export default function CheckoutPage() {
   const basketId = currentBasket?.basketId ?? null;
   const reservations = currentBasket?.reservations ?? [];
   const [provider, setProvider] = useState<PaymentProvider>('SANDBOX');
+  const [guestFirstName, setGuestFirstName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +76,7 @@ export default function CheckoutPage() {
       const paymentData = await createPayment({
         basketId,
         provider,
+        guestFirstName: guestFirstName || undefined,
         guestEmail: guestEmail || undefined,
       });
 
@@ -159,21 +161,35 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              Email <span className="text-muted-foreground font-normal">(dla gości)</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="twoj@email.com"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Na ten adres wyślemy potwierdzenie i bilety.
-            </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">
+                Imię <span className="text-muted-foreground font-normal">(dla gości)</span>
+              </Label>
+              <Input
+                id="firstName"
+                type="text"
+                placeholder="Jan"
+                value={guestFirstName}
+                onChange={(e) => setGuestFirstName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                Email <span className="text-muted-foreground font-normal">(dla gości)</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="twoj@email.com"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+              />
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Na ten adres wyślemy potwierdzenie i bilety.
+          </p>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
