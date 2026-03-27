@@ -1,4 +1,5 @@
-import axios from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '@/store/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
@@ -17,12 +18,58 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+let isRefreshing = false;
+let refreshQueue: Array<{
+  resolve: (config: InternalAxiosRequestConfig) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown) => {
+  for (const { resolve, reject } of refreshQueue) {
+    if (error) {
+      reject(error);
+    } else {
+      resolve({} as InternalAxiosRequestConfig);
+    }
+  }
+  refreshQueue = [];
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('cinema_token');
+  async (error: AxiosError) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status !== 401 || !originalRequest) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    // Don't retry refresh endpoint itself
+    if (originalRequest.url === '/api/token/refresh') {
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then(() => apiClient(originalRequest));
+    }
+
+    isRefreshing = true;
+
+    try {
+      const { refreshAccessToken } = await import('@/api/auth');
+      const data = await refreshAccessToken();
+      useAuthStore.getState().setAuth(data.jwtToken, useAuthStore.getState().email ?? '');
+      processQueue(null);
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError);
+      useAuthStore.getState().logout();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   },
 );

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { useBasketStore } from '@/store/basketStore';
+import { useAuthStore } from '@/store/authStore';
 import { updateReservationPricingType } from '@/api/reservation';
+import { getBasketPricing } from '@/api/basket';
 import { createPayment } from '@/api/payment';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import type { PaymentProvider, PricingType } from '@/api/types';
+import type { PaymentProvider, PricingType, ReservationPricingDto } from '@/api/types';
 
 const PROVIDERS: { value: PaymentProvider; label: string }[] = [
   { value: 'PAYU', label: 'PayU' },
@@ -25,16 +27,11 @@ const PROVIDERS: { value: PaymentProvider; label: string }[] = [
   { value: 'SANDBOX', label: 'Sandbox (testowy)' },
 ];
 
-// Placeholder — docelowo ceny powinny przyjść z backendu
-const TICKET_PRICE: Record<PricingType, number> = {
-  NORMAL: 29.99,
-  REDUCED: 19.99,
-};
-
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { baskets, updatePricingType, clearScreeningBasket } = useBasketStore();
+  const authenticated = useAuthStore((s) => s.isAuthenticated());
   const screeningId: string | null = state?.screeningId ?? null;
   const currentBasket = screeningId ? baskets[screeningId] : undefined;
   const basketId = currentBasket?.basketId ?? null;
@@ -44,6 +41,31 @@ export default function CheckoutPage() {
   const [guestEmail, setGuestEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<Record<string, ReservationPricingDto>>({});
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [pricingLoading, setPricingLoading] = useState(false);
+
+  const fetchPricing = useCallback(async () => {
+    if (!basketId) return;
+    setPricingLoading(true);
+    try {
+      const data = await getBasketPricing(basketId);
+      const map: Record<string, ReservationPricingDto> = {};
+      for (const r of data.reservations) {
+        map[r.reservationId] = r;
+      }
+      setPricing(map);
+      setTotalPrice(data.totalPrice);
+    } catch {
+      setError('Nie udało się pobrać cen. Spróbuj odświeżyć stronę.');
+    } finally {
+      setPricingLoading(false);
+    }
+  }, [basketId]);
+
+  useEffect(() => {
+    fetchPricing();
+  }, [fetchPricing]);
 
   if (reservations.length === 0) {
     return (
@@ -60,12 +82,11 @@ export default function CheckoutPage() {
     try {
       await updateReservationPricingType(reservationId, { pricingType });
       updatePricingType(reservationId, pricingType);
+      await fetchPricing();
     } catch {
       // cena przywrócona przez brak aktualizacji store
     }
   };
-
-  const total = reservations.reduce((sum, r) => sum + TICKET_PRICE[r.pricingType], 0);
 
   const handlePayment = async () => {
     if (!basketId) return;
@@ -76,8 +97,10 @@ export default function CheckoutPage() {
       const paymentData = await createPayment({
         basketId,
         provider,
-        guestFirstName: guestFirstName || undefined,
-        guestEmail: guestEmail || undefined,
+        ...(!authenticated && {
+          guestFirstName: guestFirstName || undefined,
+          guestEmail: guestEmail || undefined,
+        }),
       });
 
       if (screeningId) clearScreeningBasket(screeningId);
@@ -119,7 +142,9 @@ export default function CheckoutPage() {
                   </SelectContent>
                 </Select>
                 <span className="text-sm font-medium w-16 text-right">
-                  {TICKET_PRICE[res.pricingType].toFixed(2)} zł
+                  {pricing[res.reservationId]
+                    ? `${pricing[res.reservationId].price.toFixed(2)} zł`
+                    : '—'}
                 </span>
               </div>
             </div>
@@ -130,7 +155,7 @@ export default function CheckoutPage() {
               <span className="font-semibold">Razem</span>
               <Badge variant="secondary">{reservations.length} bilety</Badge>
             </div>
-            <span className="text-xl font-bold">{total.toFixed(2)} zł</span>
+            <span className="text-xl font-bold">{totalPrice.toFixed(2)} zł</span>
           </div>
         </CardContent>
       </Card>
@@ -161,40 +186,40 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">
-                Imię <span className="text-muted-foreground font-normal">(dla gości)</span>
-              </Label>
-              <Input
-                id="firstName"
-                type="text"
-                placeholder="Jan"
-                value={guestFirstName}
-                onChange={(e) => setGuestFirstName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">
-                Email <span className="text-muted-foreground font-normal">(dla gości)</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="twoj@email.com"
-                value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value)}
-              />
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Na ten adres wyślemy potwierdzenie i bilety.
-          </p>
+          {!authenticated && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Imię</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Jan"
+                    value={guestFirstName}
+                    onChange={(e) => setGuestFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="twoj@email.com"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Na ten adres wyślemy potwierdzenie i bilety.
+              </p>
+            </>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button className="w-full" size="lg" onClick={handlePayment} disabled={isLoading}>
-            {isLoading ? 'Przetwarzanie...' : `Zapłać ${total.toFixed(2)} zł`}
+          <Button className="w-full" size="lg" onClick={handlePayment} disabled={isLoading || pricingLoading}>
+            {isLoading ? 'Przetwarzanie...' : `Zapłać ${totalPrice.toFixed(2)} zł`}
           </Button>
         </CardContent>
       </Card>
