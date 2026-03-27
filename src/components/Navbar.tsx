@@ -1,8 +1,17 @@
-import { Link } from 'react-router-dom';
-import { Film } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Film, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const { email, logout, isAuthenticated } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -18,6 +27,23 @@ export default function Navbar() {
           <Link to="/screenings">
             <Button variant="ghost">Repertuar</Button>
           </Link>
+
+          {isAuthenticated() ? (
+            <div className="flex items-center gap-2 ml-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">{email}</span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-1" />
+                Wyloguj
+              </Button>
+            </div>
+          ) : (
+            <Link to="/login" className="ml-2">
+              <Button variant="outline" size="sm">
+                <LogIn className="h-4 w-4 mr-1" />
+                Zaloguj
+              </Button>
+            </Link>
+          )}
         </nav>
       </div>
     </header>

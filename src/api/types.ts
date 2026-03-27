@@ -23,9 +23,18 @@ export interface AddReservationRequest {
 export interface CreatePaymentRequest {
   basketId: string;
   provider: PaymentProvider;
-  customerId?: string;
   guestFirstName?: string;
   guestEmail?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  jwtToken: string;
 }
 
 // Responses
@@ -76,4 +85,15 @@ export interface SeatStatusDto {
 export interface RowSeatsMapResponse {
   rowNumber: number;
   seats: SeatStatusDto[];
+}
+
+export interface ReservationPricingDto {
+  reservationId: string;
+  pricingType: PricingType;
+  price: number;
+}
+
+export interface BasketPricingResponse {
+  reservations: ReservationPricingDto[];
+  totalPrice: number;
 }
