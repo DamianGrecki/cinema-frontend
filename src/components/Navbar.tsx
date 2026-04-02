@@ -2,12 +2,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Film, LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
+import { logoutRequest } from '@/api/auth';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { email, logout, isAuthenticated } = useAuthStore();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutRequest().catch(() => {});
     logout();
     navigate('/');
   };

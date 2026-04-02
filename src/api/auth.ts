@@ -14,3 +14,9 @@ export const refreshAccessToken = async (): Promise<LoginResponse> => {
   });
   return data;
 };
+
+export const logoutRequest = async (): Promise<void> => {
+  await apiClient.post('/api/token/logout', null, {
+    withCredentials: true,
+  });
+};

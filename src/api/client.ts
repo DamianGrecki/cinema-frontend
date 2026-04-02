@@ -44,8 +44,8 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Don't retry refresh endpoint itself
-    if (originalRequest.url === '/api/token/refresh') {
+    // Don't retry refresh or logout endpoints
+    if (originalRequest.url === '/api/token/refresh' || originalRequest.url === '/api/token/logout') {
       useAuthStore.getState().logout();
       return Promise.reject(error);
     }
