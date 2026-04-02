@@ -7,6 +7,7 @@ import SeatSelectionPage from '@/pages/SeatSelectionPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 import ConfirmationPage from '@/pages/ConfirmationPage';
 import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'confirmation', element: <ConfirmationPage /> },
       { path: 'login', element: <LoginPage /> },
+      { path: 'register', element: <RegisterPage /> },
     ],
   },
 ]);

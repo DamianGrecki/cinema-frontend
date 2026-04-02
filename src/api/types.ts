@@ -37,6 +37,19 @@ export interface LoginResponse {
   jwtToken: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface RegisterResponse {
+  email: string;
+  success: boolean;
+}
+
 // Responses
 export interface SuccessResponse {
   success: boolean;

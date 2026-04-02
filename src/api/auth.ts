@@ -1,10 +1,15 @@
 import { apiClient } from './client';
-import type { LoginRequest, LoginResponse } from './types';
+import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from './types';
 
 export const login = async (body: LoginRequest): Promise<LoginResponse> => {
   const { data } = await apiClient.post<LoginResponse>('/api/user/login', body, {
     withCredentials: true,
   });
+  return data;
+};
+
+export const register = async (body: RegisterRequest): Promise<RegisterResponse> => {
+  const { data } = await apiClient.post<RegisterResponse>('/api/user/register/customer', body);
   return data;
 };
 
