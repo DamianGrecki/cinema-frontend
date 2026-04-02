@@ -30,8 +30,8 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'cinema-auth',
       partialize: (state) => ({ token: state.token, email: state.email }),
-      onRehydrate: (_state) => {
-        return (rehydratedState) => {
+      onRehydrateStorage: () => {
+        return (rehydratedState: AuthState | undefined) => {
           if (rehydratedState?.token) {
             localStorage.setItem('cinema_token', rehydratedState.token);
           }
