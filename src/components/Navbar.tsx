@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, LogIn, LogOut } from 'lucide-react';
+import { Film, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
 import { logoutRequest } from '@/api/auth';
@@ -39,12 +39,20 @@ export default function Navbar() {
               </Button>
             </div>
           ) : (
-            <Link to="/login" className="ml-2">
-              <Button variant="outline" size="sm">
-                <LogIn className="h-4 w-4 mr-1" />
-                Zaloguj
-              </Button>
-            </Link>
+            <>
+              <Link to="/register" className="ml-2">
+                <Button variant="outline" size="sm">
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Zarejestruj się
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button variant="outline" size="sm">
+                  <LogIn className="h-4 w-4 mr-1" />
+                  Zaloguj
+                </Button>
+              </Link>
+            </>
           )}
         </nav>
       </div>
