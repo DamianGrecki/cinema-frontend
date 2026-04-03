@@ -24,8 +24,17 @@ export default function LoginPage() {
       const response = await login({ email, password });
       setAuth(response.jwtToken, email);
       navigate('/', { replace: true });
-    } catch {
-      setError('Nieprawidłowy email lub hasło.');
+    } catch (err: unknown) {
+      const msg =
+        err != null &&
+        typeof err === 'object' &&
+        'response' in err &&
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message;
+      if (msg === 'User account is not activated') {
+        setError('Konto nie zostało jeszcze aktywowane. Sprawdź swoją skrzynkę email.');
+      } else {
+        setError('Nieprawidłowy email lub hasło.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Film } from 'lucide-react';
 import {
@@ -17,14 +18,24 @@ interface MovieCardProps {
 
 export default function MovieCard({ movie }: MovieCardProps) {
   const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <div className="aspect-[2/3] bg-muted rounded-t-lg flex items-center justify-center overflow-hidden">
-        <div className="text-muted-foreground text-center p-4">
-          <Film className="h-12 w-12 mx-auto mb-2 opacity-40" />
-          <div className="text-xs opacity-60">{movie.title}</div>
-        </div>
+        {movie.posterUrl && !imgError ? (
+          <img
+            src={movie.posterUrl}
+            alt={movie.title}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="text-muted-foreground text-center p-4">
+            <Film className="h-12 w-12 mx-auto mb-2 opacity-40" />
+            <div className="text-xs opacity-60">{movie.title}</div>
+          </div>
+        )}
       </div>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg line-clamp-2">{movie.title}</CardTitle>
