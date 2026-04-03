@@ -1,7 +1,7 @@
 // Enums
 export type PricingType = 'NORMAL' | 'REDUCED';
 export type PresentationType = 'ORIGINAL' | 'ORIGINAL_WITH_SUBTITLES' | 'DUBBED';
-export type AudioLanguage = 'Angielski' | 'Polski';
+export type AudioLanguage = 'ENGLISH' | 'POLISH';
 export type PaymentProvider = 'PAYU' | 'PAYPAL' | 'STRIPE' | 'SANDBOX';
 
 // Requests
@@ -68,6 +68,7 @@ export interface MovieResponse {
   id: string;
   title: string;
   description: string;
+  posterUrl: string;
 }
 
 export interface MovieListResponse {
@@ -83,6 +84,7 @@ export interface ScreeningResponse {
   audioLanguage: AudioLanguage;
   startTime: string;
   endTime: string;
+  moviePosterUrl: string;
 }
 
 export interface ScreeningListResponse {

@@ -16,6 +16,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { RowSeatsMapResponse } from '@/api/types';
 
+const audioLanguageLabels: Record<string, string> = {
+  ENGLISH: 'Angielski',
+  POLISH: 'Polski',
+};
+
 const presentationLabels: Record<string, string> = {
   ORIGINAL: 'Oryginał',
   ORIGINAL_WITH_SUBTITLES: 'Oryginał z napisami',
@@ -188,7 +193,7 @@ export default function SeatSelectionPage() {
             </div>
             <div className="flex gap-2 flex-wrap mt-2">
               <Badge variant="secondary">{presentationLabels[screening.presentationType]}</Badge>
-              <Badge variant="outline">{screening.audioLanguage}</Badge>
+              <Badge variant="outline">{audioLanguageLabels[screening.audioLanguage] ?? screening.audioLanguage}</Badge>
               <Badge variant="outline">{screening.movieFormat}</Badge>
             </div>
           </CardHeader>
