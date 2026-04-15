@@ -1,8 +1,15 @@
 import { apiClient } from './client';
-import type { ScreeningListResponse, RowSeatsMapResponse } from './types';
+import type { ScreeningListResponse, ScreeningResponse, RowSeatsMapResponse } from './types';
 
-export const getScreenings = async (): Promise<ScreeningListResponse> => {
-  const { data } = await apiClient.get<ScreeningListResponse>('/api/screenings');
+export const getScreenings = async (date?: string): Promise<ScreeningListResponse> => {
+  const { data } = await apiClient.get<ScreeningListResponse>('/api/screenings', {
+    params: date ? { date } : undefined,
+  });
+  return data;
+};
+
+export const getScreening = async (screeningId: string): Promise<ScreeningResponse> => {
+  const { data } = await apiClient.get<ScreeningResponse>(`/api/screenings/${screeningId}`);
   return data;
 };
 

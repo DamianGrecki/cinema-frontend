@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { format, startOfDay, addDays, isWithinInterval } from 'date-fns';
+import { format, startOfDay, addDays } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { getScreenings } from '@/api/screenings';
 import ScreeningCard from '@/components/ScreeningCard';
@@ -16,8 +16,6 @@ function buildDayTabs() {
     return {
       key: format(date, 'yyyy-MM-dd'),
       label: i === 0 ? 'Dziś' : i === 1 ? 'Jutro' : format(date, 'EEE, d MMM', { locale: pl }),
-      start: date,
-      end: addDays(date, 1),
     };
   });
 }
@@ -54,23 +52,17 @@ export default function ScreeningsPage() {
   const activeDay = dayTabs.find((d) => d.key === dayFilter) ?? dayTabs[0];
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['screenings'],
-    queryFn: getScreenings,
+    queryKey: ['screenings', activeDay.key],
+    queryFn: () => getScreenings(activeDay.key),
   });
 
   const grouped = useMemo(() => {
     const screenings = data?.screenings ?? [];
-
-    const filtered = screenings.filter((s) => {
-      const start = new Date(s.startTime);
-      const inDay = isWithinInterval(start, { start: activeDay.start, end: activeDay.end });
-      if (!inDay) return false;
-      if (movieFilter && s.movieTitle !== movieFilter) return false;
-      return true;
-    });
-
+    const filtered = movieFilter
+      ? screenings.filter((s) => s.movieTitle === movieFilter)
+      : screenings;
     return groupByMovie(filtered);
-  }, [data, activeDay, movieFilter]);
+  }, [data, movieFilter]);
 
   const setDay = (key: string) => {
     const params = new URLSearchParams(searchParams);
