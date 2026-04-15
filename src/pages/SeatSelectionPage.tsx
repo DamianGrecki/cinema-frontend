@@ -5,7 +5,7 @@ import { isAxiosError } from 'axios';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { ArrowLeft, Clock, MapPin, ShoppingCart } from 'lucide-react';
-import { getScreenings, getScreeningSeats } from '@/api/screenings';
+import { getScreening, getScreeningSeats } from '@/api/screenings';
 import { createBasket } from '@/api/basket';
 import { addReservation, cancelReservations, cancelReservationsAsync } from '@/api/reservation';
 import { useBasketStore } from '@/store/basketStore';
@@ -79,9 +79,10 @@ export default function SeatSelectionPage() {
   }, []);
 
 
-  const { data: screeningsData } = useQuery({
-    queryKey: ['screenings'],
-    queryFn: getScreenings,
+  const { data: screening } = useQuery({
+    queryKey: ['screening', screeningId],
+    queryFn: () => getScreening(screeningId!),
+    enabled: !!screeningId,
   });
 
   const {
@@ -96,8 +97,6 @@ export default function SeatSelectionPage() {
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
-
-  const screening = screeningsData?.screenings.find((s) => s.id === screeningId);
 
   const reservedSeatIds = new Set(reservations.map((r) => r.seatId));
 

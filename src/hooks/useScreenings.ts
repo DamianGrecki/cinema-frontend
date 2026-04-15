@@ -4,6 +4,6 @@ import { getScreenings } from '@/api/screenings';
 export function useScreenings() {
   return useQuery({
     queryKey: ['screenings'],
-    queryFn: getScreenings,
+    queryFn: () => getScreenings(),
   });
 }
