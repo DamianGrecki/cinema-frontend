@@ -1,0 +1,52 @@
+name: Deploy Frontend
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ghcr.io/damiangrecki/cinema/frontend
+
+jobs:
+
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ${{ env.IMAGE }}:${{ github.sha }}
+            if ! docker network ls | grep -q cinema_cinema-network; then
+              echo "Backend stack not deployed yet. Deploy backend first."
+              exit 1
+            fi
+            docker stop frontend 2>/dev/null && docker rm frontend 2>/dev/null || true
+            docker run -d --name frontend \
+              --network cinema_cinema-network \
+              --restart unless-stopped \
+              -p 80:80 \
+              ${{ env.IMAGE }}:${{ github.sha }}
