@@ -1,0 +1,10 @@
+services:
+  frontend:
+    image: ghcr.io/damiangrecki/cinema/frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      - cinema_cinema-network
+
+networks:
+  cinema_cinema-network:
+    external: true
