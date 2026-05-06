@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { Film, History, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
 import { logoutRequest } from '@/api/auth';
@@ -32,6 +32,12 @@ export default function Navbar() {
 
           {isAuthenticated() ? (
             <div className="flex items-center gap-2 ml-2">
+              <Link to="/history">
+                <Button variant="ghost" size="sm">
+                  <History className="h-4 w-4 mr-1" />
+                  Historia
+                </Button>
+              </Link>
               <span className="text-sm text-muted-foreground hidden sm:inline">{email}</span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-1" />
