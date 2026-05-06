@@ -8,6 +8,7 @@ import CheckoutPage from '@/pages/CheckoutPage';
 import ConfirmationPage from '@/pages/ConfirmationPage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
+import HistoryPage from '@/pages/HistoryPage';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: 'confirmation', element: <ConfirmationPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
+      { path: 'history', element: <HistoryPage /> },
     ],
   },
 ]);

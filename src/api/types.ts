@@ -112,3 +112,25 @@ export interface BasketPricingResponse {
   reservations: ReservationPricingDto[];
   totalPrice: number;
 }
+
+export type Currency = 'PLN' | 'EUR' | 'USD';
+
+export interface OrderHistoryTicketResponse {
+  ticketId: string;
+  movieTitle: string;
+  screeningStart: string;
+  cinemaName: string;
+  hallName: string;
+  seatRow: number;
+  seatNumber: number;
+  price: number;
+}
+
+export interface OrderHistoryResponse {
+  orderId: string;
+  createdAt: string;
+  totalPrice: number;
+  currency: Currency;
+  refunded: boolean;
+  tickets: OrderHistoryTicketResponse[];
+}
